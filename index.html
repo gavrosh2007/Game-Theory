@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Теория игр — взвешенные решения</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ----- ФОН: цвет #F48D01 + слои с параметрами из бегунков ----- */
+        body {
+            background-color: #F48D01;
+            font-family: system-ui, 'Segoe UI', 'Cormorant Garamond', serif;
+            color: #000000;
+            line-height: 1.5;
+            padding: 2rem 1.5rem;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .bg-layers {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .bg-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* Домино: grayscale 100%, brightness 196%, contrast 300%, blur 0px, opacity 1.0 */
+        .bg-domino {
+            background-image: url('domino.png');
+            filter: grayscale(100%) brightness(196%) contrast(300%) blur(0px);
+            opacity: 1.0;
+        }
+
+        /* График: grayscale 48%, brightness 79%, contrast 300%, blur 0px, opacity 0.57 */
+        .bg-graph {
+            background-image: url('graph.png');
+            filter: grayscale(48%) brightness(79%) contrast(300%) blur(0px);
+            opacity: 0.57;
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        /* ---- Переключатель языков: прозрачное "жидкое стекло" ---- */
+        .lang-switch {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            background: rgba(176, 217, 177, 0.3);
+            backdrop-filter: blur(8px);
+            padding: 0.75rem 1.5rem;
+            border-radius: 60px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .lang-btn {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid #000000;
+            padding: 0.4rem 1rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #000000;
+            text-shadow: none;
+        }
+        .lang-btn.active {
+            background: #000000;
+            color: #b0d9b1;
+            border-color: #000000;
+        }
+        .lang-btn:hover {
+            background: rgba(0,0,0,0.5);
+            color: #ffffff;
+        }
+
+        /* ---- Заголовок и подзаголовок: прозрачное стекло ---- */
+        .hero {
+            text-align: center;
+            margin-bottom: 3rem;
+            background: rgba(176, 217, 177, 0.3);
+            backdrop-filter: blur(8px);
+            padding: 2rem;
+            border-radius: 3rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            color: #000000;
+            text-shadow: none;
+        }
+        .hero h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            margin-bottom: 0.5rem;
+            color: #000000;
+        }
+        .hero .subhead {
+            font-size: 1.3rem;
+            font-style: italic;
+            color: #000000;
+        }
+
+        /* ---- Окна: полупрозрачный цвет #F48D01, текст белый ---- */
+        .concept-card,
+        .decision-circle,
+        .quiz-card,
+        .example-box {
+            background: rgba(244, 141, 1, 0.85);
+            backdrop-filter: blur(2px);
+            border-radius: 2rem;
+            padding: 1.8rem;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,200,0.5);
+            transition: transform 0.2s;
+            color: #ffffff;
+        }
+        .concept-card:hover {
+            transform: translateY(-5px);
+            background: rgba(244, 141, 1, 0.95);
+        }
+        .example-box {
+            background: rgba(244, 141, 1, 0.7);
+            padding: 1rem;
+            border-left: 4px solid #b25d3a;
+            border-radius: 1rem;
+        }
+        .quiz-card {
+            background: rgba(244, 141, 1, 0.9);
+            padding: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+        .quote {
+            font-size: 1.2rem;
+            background: rgba(244, 141, 1, 0.85);
+            backdrop-filter: blur(4px);
+            padding: 1.5rem;
+            border-radius: 2rem;
+            margin: 2rem 0;
+            border-left: 6px solid #ffd966;
+            color: #ffffff;
+            text-shadow: none;
+        }
+        .concept-card h3,
+        .decision-circle h3,
+        .quiz-card h3,
+        .example-box h3,
+        .quote h3 {
+            color: #ffffff;
+        }
+        .concept-card strong,
+        .decision-circle strong,
+        .quiz-card strong {
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .check-btn {
+            background: #000000;
+            color: #b0d9b1;
+            border: none;
+            padding: 0.5rem 1.2rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            font-weight: bold;
+        }
+        .check-btn:hover {
+            background: #333333;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: #000000;
+            text-shadow: none;
+            font-size: 0.8rem;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+        .card-icon { font-size: 2.8rem; margin-bottom: 1rem; }
+        .algorithm-steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: space-between;
+            margin: 2rem 0;
+        }
+        .step {
+            flex: 1;
+            background: rgba(255,255,240,0.8);
+            padding: 1rem;
+            border-radius: 1.5rem;
+            text-align: center;
+            font-weight: 500;
+            color: #000000;
+        }
+        .step-number {
+            background: #b25d3a;
+            color: white;
+        }
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        .quiz-feedback {
+            margin-top: 0.5rem;
+            font-weight: 500;
+            color: #ffffff;
+        }
+        .lang-content {
+            display: none;
+        }
+        .lang-content.active {
+            display: block;
+        }
+        @media (max-width: 700px) {
+            body { padding: 1rem; }
+            h1 { font-size: 2rem; }
+            .algorithm-steps { flex-direction: column; }
+            .hero { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-layers">
+    <div class="bg-layer bg-domino"></div>
+    <div class="bg-layer bg-graph"></div>
+</div>
+
+<div class="container">
+    <div class="lang-switch">
+        <button class="lang-btn" data-lang="ru">🇷🇺 Русский</button>
+        <button class="lang-btn" data-lang="en">🇬🇧 English</button>
+    </div>
+
+    <!-- Русская версия -->
+    <div id="ru-content" class="lang-content active">
+        <div class="hero">
+            <h1>Теория игр: не прямая линия, а горизонты решений</h1>
+            <div class="subhead">Математический механизм, который взвешивает все варианты и мгновенно очерчивает круг, за который нельзя выходить.</div>
+        </div>
+        <div class="cards-grid">
+            <div class="concept-card">
+                <div class="card-icon">🧠</div>
+                <h3>Что это?</h3>
+                <p>Теория игр — наука о стратегическом выборе. Она не гадает, а <strong>просчитывает последствия</strong> каждого шага, учитывая, что другие тоже принимают решения. Универсальный язык конфликтов и сотрудничества.</p>
+            </div>
+            <div class="concept-card">
+                <div class="card-icon">⚖️</div>
+                <h3>Взвешивание вариантов</h3>
+                <p>Вы не выбираете «очевидное» — вы строите <strong>матрицу всех возможных ходов</strong>. Теория игр превращает интуицию в алгоритм, где видно, какой исход стабилен, а какой ведёт в тупик.</p>
+            </div>
+            <div class="concept-card">
+                <div class="card-icon">🚫</div>
+                <h3>Красные линии</h3>
+                <p>Главный навык — определить <strong>границы, за которые нельзя заходить ни при каких обстоятельствах</strong>. Теория игр помогает очертить этот круг до того, как эмоции возьмут верх.</p>
+            </div>
+        </div>
+
+        <div class="decision-circle">
+            <h3>📚 Исторический рубеж: Карибский кризис (1962)</h3>
+            <p>Мир стоял на пороге ядерной войны. Аналитики применили теорию игр: вместо прямого удара США выбрали <strong>морскую блокаду</strong> — действие, которое оставляло СССР пространство для отступления без унижения. Это был <strong>рациональный выбор</strong> на основе прогноза ответа. Круг, за который нельзя было выйти: ядерный удар.</p>
+            <div class="example-box">📌 <strong>Вывод:</strong> победа не всегда «уничтожить врага». Иногда победа — предвидеть его реакцию и не пересечь черту.</div>
+        </div>
+
+        <div class="decision-circle">
+            <h3>🧭 Алгоритм для любого события</h3>
+            <div class="algorithm-steps">
+                <div class="step"><span class="step-number">1</span> Кто участники?</div>
+                <div class="step"><span class="step-number">2</span> Какие варианты у каждого?</div>
+                <div class="step"><span class="step-number">3</span> Что получим при каждой комбинации?</div>
+                <div class="step"><span class="step-number">4</span> Какой ход гарантирует лучший стабильный исход?</div>
+            </div>
+            <p>🎯 Это <strong>равновесие</strong>: состояние, при котором никому не выгодно менять решение, если другие не меняют.</p>
+        </div>
+
+        <div class="quote">
+            <p>«Конфликт не закончится, пока не наступит событие <strong>А</strong> (внешний гарант) или <strong>Б</strong> (изменение таблицы выигрышей). Пока каждая сторона видит выгоду в первом ударе — круг допустимого расширяется до опасной черты.»</p>
+            <footer>— Профессор Ху (University of British Columbia)</footer>
+        </div>
+
+        <div class="decision-circle">
+            <h3>🧩 Тренировка: найди единственно верный выход</h3>
+            <div id="quiz-container">
+                <div class="quiz-card" data-quiz="1">
+                    <p><strong>Ситуация 1.</strong> Два конкурента. Если оба снижают цену — прибыль падает. Если один снижает, а другой нет — снизивший забирает всех клиентов. Какая стратегия <strong>не пересекает красную линию</strong> разорения?</p>
+                    <div class="quiz-options">
+                        <label><input type="radio" name="quiz1" value="a"> Всегда снижать цену.</label>
+                        <label><input type="radio" name="quiz1" value="b"> Всегда держать высокую.</label>
+                        <label><input type="radio" name="quiz1" value="c"> Снижать, только если конкурент снизил.</label>
+                    </div>
+                    <button class="check-btn" data-quiz="1">Проверить</button>
+                    <div class="quiz-feedback" data-feedback="1"></div>
+                </div>
+                <div class="quiz-card" data-quiz="2">
+                    <p><strong>Ситуация 2.</strong> Две страны могут вооружаться или разоружаться. Какой выбор гарантирует, что вы <strong>не перейдёте черту</strong> и постепенно придёте к разоружению?</p>
+                    <div class="quiz-options">
+                        <label><input type="radio" name="quiz2" value="a"> Всегда вооружаться.</label>
+                        <label><input type="radio" name="quiz2" value="b"> Всегда разоружаться.</label>
+                        <label><input type="radio" name="quiz2" value="c"> Вооружаться только если другая вооружается; разоружаться, если другая разоружается.</label>
+                    </div>
+                    <button class="check-btn" data-quiz="2">Проверить</button>
+                    <div class="quiz-feedback" data-feedback="2"></div>
+                </div>
+                <div class="quiz-card" data-quiz="3">
+                    <p><strong>Ситуация 3 (красная линия).</strong> Переговоры о спорной территории. Какой вариант оставляет пространство для диалога и не ведёт к войне?</p>
+                    <div class="quiz-options">
+                        <label><input type="radio" name="quiz3" value="a"> Ультиматум («всё или ничего»).</label>
+                        <label><input type="radio" name="quiz3" value="b"> Компромисс 50/50.</label>
+                        <label><input type="radio" name="quiz3" value="c"> Заморозка с наблюдателями.</label>
+                    </div>
+                    <button class="check-btn" data-quiz="3">Проверить</button>
+                    <div class="quiz-feedback" data-feedback="3"></div>
+                </div>
+            </div>
+            <p style="font-size:0.85rem; margin-top:1rem;">✅ Ответы открываются после нажатия — тренировка логики.</p>
+        </div>
+    </div>
+
+    <!-- Английская версия -->
+    <div id="en-content" class="lang-content">
+        <div class="hero">
+            <h1>Game Theory: not a straight line, but a horizon of choices</h1>
+            <div class="subhead">Weighing every option, drawing the circle you must never exit.</div>
+        </div>
+        <div class="cards-grid">
+            <div class="concept-card"><div class="card-icon">🧠</div><h3>What is it?</h3><p>Game theory is the science of strategic choice. It calculates consequences of each move, knowing others also decide.</p></div>
+            <div class="concept-card"><div class="card-icon">⚖️</div><h3>Weighing options</h3><p>You build a matrix of possible moves and responses. Game theory shows which outcome is stable.</p></div>
+            <div class="concept-card"><div class="card-icon">🚫</div><h3>Red lines</h3><p>Identify boundaries you must never cross. Game theory helps draw that circle before emotions take over.</p></div>
+        </div>
+        <div class="decision-circle"><h3>📚 Cuban Missile Crisis (1962)</h3><p>The US chose a naval blockade instead of a direct strike — leaving the USSR room to back down. The uncrossable circle: nuclear war.</p><div class="example-box">📌 Victory is not always “destroy the enemy”. Sometimes it is anticipating their reaction and not crossing the line.</div></div>
+        <div class="decision-circle"><h3>🧭 Algorithm for any event</h3><div class="algorithm-steps"><div class="step"><span class="step-number">1</span> Players</div><div class="step"><span class="step-number">2</span> Options</div><div class="step"><span class="step-number">3</span> Payoffs</div><div class="step"><span class="step-number">4</span> Stable outcome</div></div><p>🎯 Nash equilibrium: no one gains by changing their move unilaterally.</p></div>
+        <div class="quote"><p>“A conflict won’t end until event A (external guarantor) or B (change in payoff matrix). As long as each side sees advantage in striking first — the circle widens.”</p><footer>— Professor Hu (UBC)</footer></div>
+        <div class="decision-circle"><h3>🧩 Training: find the only viable solution</h3><div id="quiz-container-en">
+            <div class="quiz-card" data-quiz="1-en"><p><strong>Situation 1.</strong> Two competitors. Which strategy avoids mutual ruin?</p><div class="quiz-options"><label><input type="radio" name="quiz1en" value="a"> Always lower price.</label><label><input type="radio" name="quiz1en" value="b"> Always keep high.</label><label><input type="radio" name="quiz1en" value="c"> Lower only if competitor lowers.</label></div><button class="check-btn" data-quiz="1-en">Check</button><div class="quiz-feedback" data-feedback="1-en"></div></div>
+            <div class="quiz-card" data-quiz="2-en"><p><strong>Situation 2.</strong> Two countries. Which choice leads to disarmament?</p><div class="quiz-options"><label><input type="radio" name="quiz2en" value="a"> Always arm.</label><label><input type="radio" name="quiz2en" value="b"> Always disarm.</label><label><input type="radio" name="quiz2en" value="c"> Arm only if the other arms; disarm if the other disarms.</label></div><button class="check-btn" data-quiz="2-en">Check</button><div class="quiz-feedback" data-feedback="2-en"></div></div>
+            <div class="quiz-card" data-quiz="3-en"><p><strong>Situation 3 (red line).</strong> Which option avoids war and keeps dialogue?</p><div class="quiz-options"><label><input type="radio" name="quiz3en" value="a"> Ultimatum.</label><label><input type="radio" name="quiz3en" value="b"> 50/50 compromise.</label><label><input type="radio" name="quiz3en" value="c"> Freeze with observers.</label></div><button class="check-btn" data-quiz="3-en">Check</button><div class="quiz-feedback" data-feedback="3-en"></div></div>
+        </div></div>
+    </div>
+
+    <footer>© Теория игр — стратегическое мышление</footer>
+</div>
+
+<script>
+    // Переключение языков
+    const ruDiv = document.getElementById('ru-content');
+    const enDiv = document.getElementById('en-content');
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const lang = btn.dataset.lang;
+            if (lang === 'ru') {
+                ruDiv.classList.add('active');
+                enDiv.classList.remove('active');
+            } else {
+                ruDiv.classList.remove('active');
+                enDiv.classList.add('active');
+            }
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+    });
+    // Обработка квизов
+    const answers = { '1': 'c', '2': 'c', '3': 'c', '1-en': 'c', '2-en': 'c', '3-en': 'c' };
+    const feedbackMsg = {
+        '1': { ru: '✅ Верно! Стратегия «зуб за зуб» — самая устойчивая.', en: '✅ Correct! Tit-for-tat is the most stable.' },
+        '2': { ru: '✅ Правильно! Зеркальная стратегия ведёт к разоружению.', en: '✅ Correct! Mirror strategy leads to disarmament.' },
+        '3': { ru: '✅ Верно! Заморозка с наблюдателями сохраняет диалог.', en: '✅ Correct! Freeze with observers preserves dialogue.' }
+    };
+    document.querySelectorAll('.check-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const quizId = btn.dataset.quiz;
+            const container = btn.closest('.quiz-card');
+            const radioName = quizId.includes('en') ? `quiz${quizId.split('-')[0]}en` : `quiz${quizId}`;
+            const selected = container.querySelector(`input[name="${radioName}"]:checked`);
+            const fbDiv = container.querySelector('.quiz-feedback');
+            const lang = quizId.includes('en') ? 'en' : 'ru';
+            if (!selected) { fbDiv.innerHTML = lang === 'ru' ? '⚠️ Выберите вариант.' : '⚠️ Select an option.'; return; }
+            if (selected.value === answers[quizId]) {
+                fbDiv.innerHTML = feedbackMsg[quizId.split('-')[0]][lang];
+            } else {
+                fbDiv.innerHTML = lang === 'ru' ? '❌ Неверно. Подумайте о стабильности.' : '❌ Incorrect. Think about stability.';
+            }
+        });
+    });
+</script>
+</body>
+</html>
