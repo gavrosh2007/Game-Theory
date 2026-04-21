@@ -1,6 +1,6 @@
 {
-  "name": "Теория игр",
-  "short_name": "Game Theory",
+  "name": "HM&GT Game Theory",
+  "short_name": "HM&GT",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
