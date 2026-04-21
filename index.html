@@ -85,18 +85,29 @@
             margin: 0 auto;
         }
 
-        /* PWA иконка по центру, инструкция отдельно */
+        /* PWA кнопка — как в Hermes */
         .install-area {
             text-align: center;
-            margin-bottom: 1rem;
+            margin: 0 0 1.5rem 0;
+        }
+        .install-tooltip {
+            position: relative;
+            display: inline-block;
         }
         .pwa-icon-btn {
             background: none;
             border: none;
             cursor: pointer;
             padding: 0;
-            display: inline-block;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             transition: transform 0.2s;
+            gap: 0.3rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #000000;
         }
         .pwa-icon-btn img {
             width: 96px;
@@ -110,6 +121,29 @@
         .pwa-icon-btn:active {
             transform: scale(0.95);
         }
+        .tooltip-text {
+            visibility: hidden;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            font-size: 0.8rem;
+            font-weight: normal;
+        }
+        .install-tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
         .install-note {
             margin-top: 0.5rem;
             color: #000000;
@@ -120,8 +154,21 @@
             padding: 0.3rem 1rem;
             border-radius: 50px;
         }
+        @media (max-width: 600px) {
+            .pwa-icon-btn img {
+                width: 64px;
+                height: 64px;
+            }
+            .pwa-icon-btn {
+                font-size: 0.8rem;
+            }
+            .tooltip-text {
+                white-space: normal;
+                width: 200px;
+                bottom: 130%;
+            }
+        }
 
-        /* Кнопка вопроса под заголовком */
         .ask-btn {
             background: #000000;
             color: #b0d9b1;
@@ -139,7 +186,6 @@
             transform: scale(1.02);
         }
 
-        /* Кнопки языков — полупрозрачное окно как в оригинале, голубой оттенок */
         .lang-switch {
             display: flex;
             justify-content: flex-end;
@@ -330,6 +376,7 @@
             width: 100%;
             cursor: pointer;
             font-weight: bold;
+            margin-bottom: 0.5rem;
         }
         .answer-area {
             margin-top: 1rem;
@@ -340,6 +387,11 @@
         }
         .answer-area.active {
             display: block;
+        }
+        .close-modal {
+            background: transparent !important;
+            color: #ffffff !important;
+            border: 1px solid #ffffff !important;
         }
 
         footer {
@@ -363,10 +415,6 @@
             .hero h1 {
                 font-size: 2rem;
             }
-            .pwa-icon-btn img {
-                width: 64px;
-                height: 64px;
-            }
         }
     </style>
 </head>
@@ -377,19 +425,22 @@
 </div>
 
 <div class="container">
-    <!-- Логотип HM&GT -->
+    <!-- Логотип HM&GT (ИСПРАВЛЕНО) -->
     <div class="logo">
         <h1>HM&GT</h1>
     </div>
 
-    <!-- PWA иконка по центру, инструкция отдельно -->
     <div class="install-area">
-        <button id="pwa-install-icon" class="pwa-icon-btn">
-            <img src="icon-192x192.png" alt="Установить приложение" width="96" height="96"
-                 onerror="this.style.display='none'; this.parentNode.querySelector('.fallback-text').style.display='inline-block';">
-            <span class="fallback-text" style="display:none;">📱</span>
-        </button>
-        <div class="install-note note-pwa">✅ Нажмите на иконку, чтобы установить приложение. iPhone: Поделиться → На экран «Домой».</div>
+        <div class="install-tooltip">
+            <button id="pwa-install-icon" class="pwa-icon-btn">
+                <img src="icon-192x192.png" alt="Установить приложение" width="96" height="96"
+                     onerror="this.style.display='none'; this.parentNode.querySelector('.fallback-text').style.display='inline-block';">
+                <span class="fallback-text" style="display:none;">📱</span>
+                <span id="pwaButtonText">Установить</span>
+            </button>
+            <span class="tooltip-text" id="pwaTooltip">💡 Нажмите — установите как приложение.<br>• Chrome/Edge: появится диалог.<br>• iPhone: Поделиться → На экран «Домой».</span>
+        </div>
+        <div class="install-note" id="installNote">✅ Нажмите на иконку монитора со стрелкой в адресной строке, чтобы установить приложение. На iPhone: Поделиться → На экран «Домой».</div>
     </div>
 
     <div class="lang-switch">
@@ -397,7 +448,6 @@
         <button class="lang-btn" data-lang="en">🇬🇧 English</button>
     </div>
 
-    <!-- Русская версия -->
     <div id="ru-content" class="lang-content active">
         <div class="hero">
             <h1>Теория игр: не прямая линия, а горизонты решений</h1>
@@ -457,7 +507,6 @@
         </div>
     </div>
 
-    <!-- Английская версия -->
     <div id="en-content" class="lang-content">
         <div class="hero">
             <h1>Game Theory: not a straight line, but a horizon of choices</h1>
@@ -481,7 +530,6 @@
     <footer>© Теория игр — стратегическое мышление</footer>
 </div>
 
-<!-- Модальное окно -->
 <div id="questionModal" class="modal">
     <div class="modal-content">
         <h3 id="modalTitle">🤔 Задайте свой вопрос</h3>
@@ -491,29 +539,54 @@
             <strong id="answerTitle">📊 Анализ на основе теории игр:</strong>
             <p id="answerText"></p>
         </div>
-        <button class="close-modal">✖ Закрыть</button>
+        <button id="closeModalBtn" class="close-modal">✖ Закрыть</button>
     </div>
 </div>
 
 <script>
-    // PWA установка
     let deferredPrompt;
+    
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
     });
-    document.getElementById('pwa-install-icon')?.addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            await deferredPrompt.userChoice;
-            deferredPrompt = null;
-        } else {
-            const lang = document.querySelector('.lang-btn.active')?.dataset.lang || 'ru';
-            alert(lang === 'ru' ? 'Для установки: Chrome → три точки → "Установить приложение"' : 'To install: Chrome → three dots → "Install app"');
-        }
-    });
+    
+    window.showPWAInstructions = function() {
+        const lang = document.querySelector('.lang-btn.active')?.dataset.lang || 'ru';
+        let msg = '';
+        if (lang === 'ru') msg = 'Для установки приложения:\n\n• На компьютере: нажмите на иконку монитора со стрелкой в адресной строке.\n• На iPhone: нажмите "Поделиться" → "На экран «Домой»".\n• На Android: нажмите на иконку монитора со стрелкой в адресной строке.';
+        else msg = 'To install the app:\n\n• On computer: click the monitor icon with a down arrow in the address bar.\n• On iPhone: tap "Share" → "Add to Home Screen".\n• On Android: tap the monitor icon with a down arrow in the address bar.';
+        alert(msg);
+    };
+    
+    const pwaButton = document.getElementById('pwa-install-icon');
+    if (pwaButton) {
+        pwaButton.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+            } else {
+                showPWAInstructions();
+            }
+        });
+    }
 
-    // Модальное окно
+    function updatePWATexts(lang) {
+        const btnText = document.getElementById('pwaButtonText');
+        const tooltip = document.getElementById('pwaTooltip');
+        const installNote = document.getElementById('installNote');
+        if (lang === 'ru') {
+            if (btnText) btnText.textContent = 'Установить';
+            if (tooltip) tooltip.innerHTML = '💡 Нажмите — установите как приложение.<br>• Chrome/Edge: появится диалог.<br>• iPhone: Поделиться → На экран «Домой».';
+            if (installNote) installNote.innerHTML = '✅ Нажмите на иконку монитора со стрелкой в адресной строке, чтобы установить приложение. На iPhone: Поделиться → На экран «Домой».';
+        } else {
+            if (btnText) btnText.textContent = 'Install';
+            if (tooltip) tooltip.innerHTML = '💡 Click — install as app.<br>• Chrome/Edge: dialog appears.<br>• iPhone: Share → Add to Home Screen.';
+            if (installNote) installNote.innerHTML = '✅ Click the monitor icon with a down arrow in the address bar to install the app. On iPhone: Share → Add to Home Screen.';
+        }
+    }
+
     const modal = document.getElementById('questionModal');
     const askBtn = document.getElementById('askQuestionBtn');
     const askBtnEn = document.getElementById('askQuestionBtnEn');
@@ -531,7 +604,6 @@
     }));
     modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
 
-    // Генератор ответов
     function analyzeQuestion(question) {
         const q = question.toLowerCase();
         
@@ -576,33 +648,51 @@
     submitBtn.addEventListener('click', () => {
         const question = document.getElementById('questionText').value;
         if (!question.trim()) {
-            answerText.innerText = '❌ Пожалуйста, введите ваш вопрос.';
+            const lang = document.querySelector('.lang-btn.active')?.dataset.lang || 'ru';
+            answerText.innerText = lang === 'ru' ? '❌ Пожалуйста, введите ваш вопрос.' : '❌ Please enter your question.';
             answerArea.classList.add('active');
             return;
         }
-        const answer = analyzeQuestion(question);
+        const currentLang = document.querySelector('.lang-btn.active')?.dataset.lang || 'ru';
+        let answer = analyzeQuestion(question);
+        if (currentLang === 'en') {
+            answer = answer
+                .replace('⚠️ Извините, я не могу отвечать на вопросы, связанные с насилием, оружием или причинением вреда. Пожалуйста, задайте другой вопрос.', '⚠️ Sorry, I cannot answer questions about violence, weapons, or harm. Please ask another question.')
+                .replace('📈 Вероятность финансового успеха — 67%\n\nОснование: теория игр — ваша стратегия накопления и риска. Статистика: люди, задающие такие вопросы, в 2 раза чаще меняют финансовое поведение.\n\nНедостаточно данных для точного прогноза: нужны возраст, доход, инвестиции. Без этого — оценка ±15%.', '📈 Probability of financial success — 67%\n\nBasis: game theory — your saving and risk strategy.\n\nInsufficient data: age, income, investments needed.')
+                .replace('💑 Вероятность улучшения личной жизни в ближайший год — 72%\n\nОснование: теория игр — ваш запрос означает готовность к действию. Психология: люди, задающие такие вопросы, чаще меняют поведение.\n\nНедостаточно данных: нужны возраст, социальная активность.', '💑 Probability of personal life improvement in the next year — 72%\n\nInsufficient data: age, social activity needed.')
+                .replace('🕊️ Через 50 лет останется 15-20 крупных религиозных течений\n\nОснование: теория игр — конкуренция за адептов ведёт к слияниям идей. Статистика: за 100 лет число независимых религиозных течений сократилось на 40%.', '🕊️ In 50 years, 15-20 major religious movements will remain.')
+                .replace('💼 Вероятность положительных карьерных изменений — 58%\n\nОснование: теория игр — ваш вопрос говорит о рефлексии. Статистика: 70% повышений получают те, кто их явно просит.\n\nНедостаточно данных: нужны стаж, должность, отрасль.', '💼 Probability of positive career changes — 58%\n\nInsufficient data: seniority, position, industry needed.')
+                .replace('🌍 Вероятность эскалации конфликта в ближайшие 2 года — 45%\n\nОснование: теория игр — накопленные ресурсы и асимметрия информации. Логистика и энергия — главные факторы тупика.\n\nРавновесие: внешний гарант (ООН, Китай, США) — единственный выход.', '🌍 Probability of conflict escalation in the next 2 years — 45%\n\nEquilibrium: external guarantor (UN, China, US) is the only way out.')
+                .replace('🤖 Вероятность технологической сингулярности к 2050 году — 40%\n\nОснование: теория игр — гонка ИИ-компаний, каждый стремится первым. Экспоненциальный рост вычислительных мощностей.\n\nРавновесие: возможно самоограничение или гонка без тормозов.', '🤖 Probability of technological singularity by 2050 — 40%\n\nEquilibrium: possible self-restraint or uncontrolled race.')
+                .replace('❤️ Вероятность дожить до 80 лет при текущих условиях — 65%\n\nОснование: теория игр — ваше поведение (курение, спорт, питание) — доминирующие стратегии. Генетика даёт 30%, образ жизни — 50%.\n\nНедостаточно данных: нужны возраст, пол, регион.', '❤️ Probability of living to 80 under current conditions — 65%\n\nInsufficient data: age, gender, region needed.')
+                .replace('❓ Недостаточно данных для анализа.\n\nТеория игр требует определённых параметров: участники, варианты ходов, выигрыши.\n\nЧто нужно уточнить в вопросе:\n• Кто участники ситуации?\n• Какие у них возможные действия?\n• Каковы временные рамки?\n• Ваша роль в этом событии?\n\nПожалуйста, переформулируйте вопрос с указанием этих данных.', '❓ Insufficient data for analysis.\n\nGame theory requires specific parameters: players, possible moves, payoffs.\n\nPlease rephrase your question with these details.');
+        }
         answerText.innerText = answer;
         answerArea.classList.add('active');
     });
 
-    // Перевод интерфейса
-    const translations = {
+    const translationsModal = {
         ru: {
-            note: '✅ Нажмите на иконку, чтобы установить приложение. iPhone: Поделиться → На экран «Домой».',
             modalTitle: '🤔 Задайте свой вопрос',
-            answerTitle: '📊 Анализ на основе теории игр:'
+            submitBtn: '🔮 Получить анализ',
+            answerTitle: '📊 Анализ на основе теории игр:',
+            closeBtn: '✖ Закрыть'
         },
         en: {
-            note: '✅ Click the icon to install the app. iPhone: Share → Add to Home Screen.',
             modalTitle: '🤔 Ask your question',
-            answerTitle: '📊 Game theory analysis:'
+            submitBtn: '🔮 Get analysis',
+            answerTitle: '📊 Game theory analysis:',
+            closeBtn: '✖ Close'
         }
     };
     
-    function updateUI(lang) {
-        document.querySelectorAll('.note-pwa').forEach(el => el.textContent = translations[lang].note);
-        document.getElementById('modalTitle').textContent = translations[lang].modalTitle;
-        document.getElementById('answerTitle').textContent = translations[lang].answerTitle;
+    function updateUILang(lang) {
+        document.getElementById('modalTitle').textContent = translationsModal[lang].modalTitle;
+        document.getElementById('submitQuestion').textContent = translationsModal[lang].submitBtn;
+        document.getElementById('answerTitle').textContent = translationsModal[lang].answerTitle;
+        const closeBtn = document.getElementById('closeModalBtn');
+        if (closeBtn) closeBtn.textContent = translationsModal[lang].closeBtn;
+        updatePWATexts(lang);
     }
 
     const ruDiv = document.getElementById('ru-content');
@@ -619,12 +709,11 @@
             }
             document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            updateUI(lang);
+            updateUILang(lang);
         });
     });
-    updateUI('ru');
+    updateUILang('ru');
 
-    // Квизы
     const answers = { '1': 'c', '2': 'c', '1-en': 'c', '2-en': 'c' };
     const feedbackMsg = {
         '1': { ru: '✅ Верно! Стратегия «зуб за зуб» — самая устойчивая.', en: '✅ Correct! Tit-for-tat is the most stable.' },
@@ -646,6 +735,14 @@
             }
         });
     });
+
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/Game-Theory-Oracle/sw.js', { scope: '/Game-Theory-Oracle/' })
+                .then(reg => console.log('✅ Service Worker registered:', reg.scope))
+                .catch(err => console.log('❌ Service Worker error:', err));
+        });
+    }
 </script>
 </body>
 </html>
