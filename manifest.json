@@ -1,24 +1,14 @@
 {
-  "name": "HM&amp;GT Game Theory",
-  "short_name": "HM&amp;GT",
-  "start_url": "/Game-Theory-Oracle/index.html",
-  "scope": "/Game-Theory-Oracle/",
+  "name": "HM&GT Game Theory",
+  "short_name": "HM&GT",
+  "start_url": "/Game-Theory/index.html",
+  "scope": "/Game-Theory/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "theme_color": "#F48D01",
   "background_color": "#F48D01",
   "icons": [
-    {
-      "src": "/Game-Theory-Oracle/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/Game-Theory-Oracle/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    }
+    {"src": "/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}
   ]
 }
